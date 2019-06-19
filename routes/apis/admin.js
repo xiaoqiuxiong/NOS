@@ -67,5 +67,23 @@ router.post('/logout', async ctx => {
         msg: '已经退出登录'
     }
 })
+// 管理员删除
+router.get('/del', async ctx => {
+    let id_ = ctx.request.query.id
+    console.log(id_)
+    let doc = Admin.findOneAndRemove({ id_ }).exec()
+    if (doc) {
+        ctx.body = {
+            code: 0,
+            msg: '删除成功'
+        }
+    }else{
+        ctx.body={
+            code: 1,
+            msg: '删除失败'
+        }
+    }
+
+})
 
 module.exports = router

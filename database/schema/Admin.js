@@ -1,7 +1,5 @@
 const mongoose = require('mongoose')
-const autoIncrement = require('mongoose-auto-increment2');
-var connection = mongoose.createConnection("mongodb://localhost/NOS");
-autoIncrement.initialize(connection);
+const AutoIncrement = require('mongoose-sequence')(mongoose);
 const Schema = mongoose.Schema
 const bcrypt = require('bcrypt')
 const utils = require('../../util')
@@ -23,13 +21,9 @@ const adminSchema = new Schema({
         default: Date.now()
     }
 })
+
 // 自增 ID 插件配置
-adminSchema.plugin(autoIncrement.plugin, {
-    model: 'Admin',
-    field: 'adminId',
-    startAt: 1,
-    incrementBy: 1,
-});
+adminSchema.plugin(AutoIncrement, { inc_field: 'id_' });
 
 adminSchema.pre('save', function(next) {
     // 加密模块

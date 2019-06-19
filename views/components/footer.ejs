@@ -26,6 +26,70 @@ function delCookie(name) {
         document.cookie = name + "=" + cval + ";expires=" + exp.toGMTString();
     }
 }
+
+function checkboxItem(form) {
+    const checkboxAdmins = $('input[name="checkboxItem"]')
+    const checkboxAdminsChecked = $('input[name="checkboxItem"]:checked')
+    if (checkboxAdmins.length == checkboxAdminsChecked.length) {
+        $('input[name="checkboxAll"]').prop("checked", true);
+    } else {
+        $('input[name="checkboxAll"]').prop("checked", false);
+    }
+    form.render()
+}
+
+function checkboxAll(form) {
+    const isCheck = $('input[name="checkboxAll"]').is(':checked')
+    $('input[name="checkboxItem"]').prop("checked", isCheck);
+    form.render()
+}
+
+function get({
+    url,
+    data,
+    successfn,
+    errorfn
+}) {
+    $.ajax({
+        url: url,
+        type: 'get',
+        data: data,
+        success(res) {
+            if (res.code == 9999) {
+                top.location.reload()
+            } else {
+                successfn(res)
+            }
+        },
+        error(err) {
+            console.log(err)
+            layer.msg('网管去放牛了');
+        }
+    })
+}
+function post({
+    url,
+    data,
+    successfn,
+    errorfn
+}) {
+    $.ajax({
+        url: url,
+        type: 'post',
+        data: data,
+        success(res) {
+            if (res.code == 9999) {
+                top.location.reload()
+            } else {
+                successfn(res)
+            }
+        },
+        error(err) {
+            console.log(err)
+            layer.msg('网管去放牛了');
+        }
+    })
+}
 </script>
 
 </html>
