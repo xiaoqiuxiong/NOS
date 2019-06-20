@@ -1,0 +1,21 @@
+<%- include('../components/iframeHeader'); %>
+
+<body>
+    <div class="layui-fluid">
+        <div class="layui-row">
+            <div class="cell-item">
+                <div class="left">用户ID</div>
+                <div class="right"><%= adminInfo.id_ %></div>
+            </div>
+            <div class="cell-item">
+                <div class="left">用户名</div>
+                <div class="right"><%= adminInfo.username %></div>
+            </div>
+            <div class="cell-item">
+                <div class="left">注册时间</div>
+                <div class="right"><%= fun.filterTime(adminInfo.createAt) %></div>
+            </div>
+        </div>
+    </div>
+</body>
+<%- include('../components/footer'); %>

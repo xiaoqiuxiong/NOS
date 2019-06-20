@@ -1,3 +1,29 @@
-<h1><%= message %></h1>
-<h2><%= error.status %></h2>
-<pre><%= error.stack %></pre>
+<%- include('components/header'); %>
+<style>
+body {
+    display: -webkit-flex;
+    display: -moz-flex;
+    display: -ms-flex;
+    display: -o-flex;
+    display: flex;
+    -ms-align-items: center;
+    align-items: center;
+    justify-content: center;
+    background-color: #f2f2f2 !important;
+    flex-wrap: wrap;
+}
+
+.error {
+    width: 100%;
+    max-width: 600px;
+    text-align: center;
+}
+</style>
+
+<body>
+    <div class="error">
+        <img class="error" src="../images/error.png" alt="">
+        <a href="/" class="layui-btn layui-btn-radius layui-btn-primary">回到首页</a>
+    </div>
+</body>
+<%- include('components/footer'); %>

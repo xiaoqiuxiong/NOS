@@ -1,0 +1,195 @@
+<%- include('../components/header'); %>
+
+<body>
+    <div class="x-nav">
+        <span class="layui-breadcrumb">
+            <a>
+              <cite><%= title %></cite></a>
+          </span>
+        <a class="layui-btn layui-btn-small" style="line-height:1.6em;margin-top:3px;float:right" onclick="location.reload()" title="刷新">
+            <i class="layui-icon layui-icon-refresh" style="line-height:30px"></i></a>
+    </div>
+    <div class="layui-fluid">
+        <div class="layui-row layui-col-space15">
+            <div class="layui-col-md12">
+                <div class="layui-card">
+                    <div class="layui-card-body ">
+                        <form id="searchForm" class="layui-form layui-col-space5">
+                            <div class="layui-inline layui-show-xs-block">
+                                <input type="text" name="keyWords" placeholder="请输入用户id或者用户名" autocomplete="off" value="" class="layui-input">
+                            </div>
+                            <div class="layui-inline layui-show-xs-block">
+                                <button class="layui-btn" type="submit"><i class="layui-icon">&#xe615;</i></button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="layui-card-header">
+                        <button class="layui-btn layui-btn-danger" onclick="delAll()"><i class="layui-icon"></i>批量删除</button>
+                    </div>
+                    <div class="layui-card-body">
+                        <table class="layui-table layui-form" id="viewbox">
+                            <thead>
+                                <tr>
+                                    <th>
+                                        <input lay-filter="checkboxAll" type="checkbox" name="checkboxAll" lay-skin="primary">
+                                    </th>
+                                    <th>ID</th>
+                                    <th>登录名</th>
+                                    <th>加入时间</th>
+                                    <th>操作</th>
+                            </thead>
+                            <tbody id="view">
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="layui-card-body ">
+                        <div class="page" id="page"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+<script id="demo" type="text/html">
+    {{#  layui.each(d, function(index, item){ }}
+    <tr>
+    <td>
+    <input data-value="{{item.id_}}" lay-filter="checkboxItem" type="checkbox" name="checkboxItem" lay-skin="primary">
+    </td>
+    <td>
+    {{item.id_}}
+    </td>
+    <td>
+    {{item.username}}
+    </td>
+    <td>
+        {{filterTime(item.createAt)}}
+    </td>
+    <td class="td-manage">
+    <a title="删除" onclick="member_del(this,{{item.id_}})" href="javascript:;">
+    <i class="layui-icon">&#xe640;</i>
+    </a>
+    </td>
+    </tr>
+    {{#  }); }}
+</script>
+<script>
+let page = 1,
+    limit = 10,
+    pages = 0;
+$(() => {
+    layui.use(['laydate', 'form', 'laytpl', 'laypage'], () => {
+        let laytpl = layui.laytpl
+        let laydate = layui.laydate;
+        let form = layui.form;
+        let laypage = layui.laypage;
+        layui.code
+        form.on('checkbox(checkboxItem)', data => {
+            checkboxItem(form)
+        });
+        form.on('checkbox(checkboxAll)', data => {
+            checkboxAll(form)
+        });
+        laydate.render({
+            elem: '#start'
+        });
+
+        laydate.render({
+            elem: '#end'
+        });
+        member_list(laytpl, form, laypage)
+        $('#searchForm').on('submit', () => {
+            member_list(laytpl, form, laypage)
+            event.preventDefault()
+        })
+    });
+})
+// 获取用户数据
+function member_list(laytpl, form, laypage) {
+    page = 1;
+    pages = 0;
+    let getTpl = demo.innerHTML,
+        view = document.getElementById('view');
+    view.innerHTML = ''
+    get({
+        url: '/apis/admin/list',
+        data: {
+            page,
+            limit,
+            keyWords: $('input[name="keyWords"]').val()
+        },
+        successfn: (res) => {
+            if (res.code == 0) {
+                $('#page').show()
+                laytpl(getTpl).render(res.data, html => {
+                    view.innerHTML = html;
+                    pages = res.pages
+                });
+            } else {
+                view.innerHTML = `<div class="nothing">没有数据了</div>`
+                pages = 0
+                $('#page').hide()
+            }
+            form.render()
+            laypage.render({
+                elem: 'page',
+                count: pages
+            });
+        }
+    })
+}
+
+/*用户-删除*/
+function member_del(obj, id) {
+    layer.confirm('确认要删除吗？', index => {
+        get({
+            url: '/apis/admin/del',
+            data: {
+                ids: JSON.stringify([id])
+            },
+            successfn: (res) => {
+                if (res.code == 0) {
+                    layer.msg('已删除!', { icon: 1, time: 1000 });
+                    top.location.reload()
+                } else {
+                    layer.msg('删除失败!', { icon: 2, time: 1000 });
+                }
+            }
+        })
+    });
+}
+
+
+function delAll() {
+    const checkboxs = $('input[name="checkboxItem"]:checked')
+    if (!checkboxs.length) {
+        layer.msg('请选择需要删除的管理员!', { icon: 2, time: 1000 });
+        return false
+    }
+    let ids = []
+    checkboxs.map((index, elem) => {
+        ids.push($(elem).attr('data-value'))
+    })
+    layer.confirm('确认要删除吗？', function(index) {
+        get({
+            url: '/apis/admin/del',
+            data: {
+                ids: JSON.stringify(ids)
+            },
+            successfn: (res) => {
+                if (res.code == 0) {
+                    layer.msg('已删除!', { icon: 1, time: 1000 });
+                    top.location.reload()
+                } else {
+                    layer.msg('删除失败!', { icon: 2, time: 1000 });
+                }
+            }
+        })
+    });
+}
+
+function filterTime(time) {
+    return new Date(time).toLocaleDateString().replace(/\//g, "-") + " " + new Date(time).toTimeString().substr(0, 8)
+}
+</script>
+<%- include('../components/footer'); %>

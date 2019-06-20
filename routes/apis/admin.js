@@ -40,7 +40,7 @@ router.post('/login', async ctx => {
     await passport.authenticate('local', (err, user, info, status) => {
         if (utils.isEmpty(user)) {
             const userInfo = {
-                userid: user._id,
+                id_: user.id_,
                 username: user.username
             }
             ctx.cookies.set('token', new Buffer(JSON.stringify(userInfo)).toString('base64'), { maxAge: 1000 * 60 * 60 * 24 })
@@ -67,23 +67,81 @@ router.post('/logout', async ctx => {
         msg: '已经退出登录'
     }
 })
+
+// 管理员列表
+router.get('/list', async ctx => {
+    let page = Number(ctx.query.page || 1)
+    const limit = Number(ctx.query.limit || 10)
+    let pages = 0
+    const keyWords = ctx.query.keyWords
+    let regData;
+    //不区分大小写
+    const reg = new RegExp(keyWords, 'i')
+    if (!parseFloat(keyWords)) {
+        // 不是数字
+        regData = {
+            $or: [
+                { username: { $regex: reg } }
+            ]
+        }
+    } else {
+        regData = {
+            $or: [
+                { id_: keyWords },
+                { username: { $regex: reg } }
+            ]
+        }
+    }
+    try {
+        const total = await Admin.count(regData)
+
+        if (!utils.isEmpty(total)) {
+            const res = {
+                code: 2,
+                msg: '暂无数据'
+            }
+            ctx.body = res
+            return
+        }
+        pages = Math.ceil(total / limit)
+        page = Math.min(page, pages)
+        page = Math.max(page, 1)
+        const skip = (page - 1) * limit
+        let result = await Admin.find(regData).sort({ id: 1 }).limit(limit).skip(skip).select('-password');
+        const res = {
+            code: 0,
+            msg: '',
+            count: total,
+            pages: pages,
+            data: result
+        }
+        ctx.body = res
+    } catch (err) {
+        console.log(err)
+        const res = {
+            code: 1,
+            msg: '网管去放牛了'
+        }
+        ctx.body = res
+    }
+});
+
+
 // 管理员删除
 router.get('/del', async ctx => {
-    let id_ = ctx.request.query.id
-    console.log(id_)
-    let doc = Admin.findOneAndRemove({ id_ }).exec()
+    const ids = JSON.parse(ctx.request.query.ids)
+    const doc = Admin.remove({ id_: { $in: ids } }).exec()
     if (doc) {
         ctx.body = {
             code: 0,
             msg: '删除成功'
         }
-    }else{
-        ctx.body={
+    } else {
+        ctx.body = {
             code: 1,
             msg: '删除失败'
         }
     }
-
 })
 
 module.exports = router
